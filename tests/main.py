@@ -63,15 +63,16 @@ while running:
     if moving:
         anim_idx = 1
 
-    frame = skelform_pygame.time_frame(
-        time.time(), skellington.armature.animations[0], False, True
-    )
+    skel = skellington.armature
+    frame = skelform_pygame.time_frame(time.time(), skel.animations[0], False, True)
     props = skelform_pygame.animate(
-        screen,
         skellington.armature,
         skellington_img,
-        anim_idx,
-        frame,
+        [
+            skel.animations[0],
+        ],
+        [frame],
+        screen,
         skelform_pygame.AnimOptions(player_pos, 0.25),
     )
     skelform_pygame.draw(props, skellington.armature.styles, skellington_img, screen)
