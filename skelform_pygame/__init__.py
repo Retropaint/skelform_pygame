@@ -4,12 +4,12 @@ import math
 import copy
 import zipfile
 import json
+from dataclasses import dataclass
+from typing import Optional
 
 # 3rd parties
 sys.path.append("../../skelform_python")
 import skelform_python as skf_py
-from dataclasses import dataclass
-from typing import Optional
 import dacite
 import pygame
 
@@ -26,7 +26,7 @@ def load_skelform(path):
 
 @dataclass
 class AnimOptions:
-    position: pygame.Vector2
+    position: pygame.math.Vector2
     scale: pygame.Vector2
     blend_frames: list[int]
 
@@ -55,22 +55,28 @@ def animate(
             armature, animations[a], frames[a], anim_options.blend_frames[a]
         )
 
-    props = copy.deepcopy(armature.bones)
-    inh_props = copy.deepcopy(props)
+    inh_props = copy.deepcopy(armature.bones)
 
     inh_props = skf_py.inheritance(inh_props, {})
     for i in range(10):
         ik_rots = skf_py.inverse_kinematics(inh_props, armature.ik_families, False)
-    props = skf_py.inheritance(props, ik_rots)
 
-    for prop in props:
-        prop.pos.y = -prop.pos.y
+    final_bones = copy.deepcopy(armature.bones)
+    final_bones = skf_py.inheritance(final_bones, ik_rots)
 
-        prop.pos = skf_py.vec_mul(prop.pos, anim_options.scale)
-        prop.scale = skf_py.vec_mul(prop.scale, anim_options.scale)
-        prop.pos = skf_py.vec_add(prop.pos, anim_options.position)
+    for bone in final_bones:
+        bone.pos.y = -bone.pos.y
 
-    return props
+        bone.pos = skf_py.vec_mul(bone.pos, anim_options.scale)
+        bone.scale = skf_py.vec_mul(bone.scale, anim_options.scale)
+        bone.pos = skf_py.vec_add(bone.pos, anim_options.position)
+
+        either = anim_options.scale.x < 0 or anim_options.scale.y < 0
+        both = anim_options.scale.x < 0 and anim_options.scale.y < 0
+        if either and not both:
+            bone.rot = -bone.rot
+
+    return final_bones
 
 
 def draw(props, styles, tex_img, screen):
@@ -94,6 +100,11 @@ def draw(props, styles, tex_img, screen):
             tex_surf,
             (math.fabs(prop.scale.x), math.fabs(prop.scale.y)),
         )
+
+        if prop.scale.x < 0 or prop.scale.y < 0:
+            tex_surf = pygame.transform.flip(
+                tex_surf, prop.scale.x < 0, prop.scale.y < 0
+            )
 
         # push textures back left and up so that it's centered
         prop_tex_pos = prop.pos
