@@ -3,12 +3,11 @@ import sys
 sys.path.append("../../skelform_python")
 
 import pygame
-import skelform_python
+import skelform_python as skf_py
 import math
 import copy
 import zipfile
 import json
-from types import SimpleNamespace
 import dacite
 
 
@@ -17,9 +16,7 @@ def load_skelform(path):
         skelform_root_json = json.load(zip_file.open("armature.json"))
         texture_img = pygame.image.load(zip_file.open("textures.png"))
 
-    skelform_root = dacite.from_dict(
-        data_class=skelform_python.SkfRoot, data=skelform_root_json
-    )
+    skelform_root = dacite.from_dict(data_class=skf_py.SkfRoot, data=skelform_root_json)
 
     return (skelform_root, texture_img)
 
@@ -43,24 +40,18 @@ def animate(
     texture_img,
     anim_idx,
     frame=-1,
-    elapsed_time=-1,
     anim_options=AnimOptions(),
 ):
-    props = copy.deepcopy(armature.bones)
-
     if anim_idx < len(armature.animations):
-        if elapsed_time != -1:
-            frame = get_frame_by_time(armature, anim_idx, elapsed_time, False)
-        props = skelform_python.animate(armature, anim_idx, frame)
+        armature.bones = skf_py.animate(armature, anim_idx, frame)
 
+    props = copy.deepcopy(armature.bones)
     inh_props = copy.deepcopy(props)
 
-    inh_props = skelform_python.inheritance(inh_props, {})
+    inh_props = skf_py.inheritance(inh_props, {})
     for i in range(10):
-        ik_rots = skelform_python.inverse_kinematics(
-            inh_props, armature.ik_families, False
-        )
-    props = skelform_python.inheritance(props, ik_rots)
+        ik_rots = skf_py.inverse_kinematics(inh_props, armature.ik_families, False)
+    props = skf_py.inheritance(props, ik_rots)
 
     ao = anim_options
 
@@ -124,7 +115,7 @@ def draw(props, styles, tex_img, screen):
 
 
 def get_frame_by_time(armature, anim_idx, elapsed, reverse):
-    return skelform_python.get_frame_by_time(armature, anim_idx, elapsed, reverse)
+    return skf_py.get_frame_by_time(armature, anim_idx, elapsed, reverse)
 
 
 # https://stackoverflow.com/a/71370036
@@ -141,3 +132,11 @@ def rot_center(image, rect, angle):
     rot_image = pygame.transform.rotate(image, angle)
     rot_rect = rot_image.get_rect(center=rect.center)
     return rot_image, rot_rect
+
+
+def time_frame(time, animation: skf_py.Animation, reverse, loop):
+    return skf_py.time_frame(time, animation, reverse, loop)
+
+
+def format_frame(frame, animation: skf_py.Animation, reverse, loop):
+    return skf_py.format_frame(frame, animation, reverse, loop)
