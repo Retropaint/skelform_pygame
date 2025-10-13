@@ -8,6 +8,8 @@ import json
 # 3rd parties
 sys.path.append("../../skelform_python")
 import skelform_python as skf_py
+from dataclasses import dataclass
+from typing import Optional
 import dacite
 import pygame
 
@@ -22,16 +24,21 @@ def load_skelform(path):
     return (skelform_root, texture_img)
 
 
+@dataclass
 class AnimOptions:
+    position: pygame.Vector2
+    scale: pygame.Vector2
+    blend_frames: list[int]
+
     def __init__(
         self,
-        # Offset armature's position by this much.
-        pos_offset: pygame.Vector2 = pygame.Vector2(0, 0),
-        # Scale armature by a factor of this.
-        scale_factor=0.25,
+        position=pygame.Vector2(0, 0),
+        scale=pygame.Vector2(0.25, 0.25),
+        blend_frames=[0, 0, 0, 0, 0, 0],
     ):
-        self.pos_offset = pos_offset
-        self.scale_factor = scale_factor
+        self.position = position
+        self.scale = scale
+        self.blend_frames = blend_frames
 
 
 # Animate a SkelForm armature.
@@ -44,7 +51,9 @@ def animate(
     anim_options=AnimOptions(),
 ):
     for a in range(len(animations)):
-        armature.bones = skf_py.animate(armature, animations[a], frames[a])
+        armature.bones = skf_py.animate(
+            armature, animations[a], frames[a], anim_options.blend_frames[a]
+        )
 
     props = copy.deepcopy(armature.bones)
     inh_props = copy.deepcopy(props)
@@ -54,20 +63,12 @@ def animate(
         ik_rots = skf_py.inverse_kinematics(inh_props, armature.ik_families, False)
     props = skf_py.inheritance(props, ik_rots)
 
-    ao = anim_options
-
     for prop in props:
-        # pygame treats positive y as down
         prop.pos.y = -prop.pos.y
 
-        # adjust positions for scale factor
-        # actual scale is already accounted for in core logic
-        prop.pos.x *= ao.scale_factor
-        prop.pos.y *= ao.scale_factor
-        prop.scale.x *= ao.scale_factor
-        prop.scale.y *= ao.scale_factor
-        prop.pos.x += ao.pos_offset.x
-        prop.pos.y += ao.pos_offset.y
+        prop.pos = skf_py.vec_mul(prop.pos, anim_options.scale)
+        prop.scale = skf_py.vec_mul(prop.scale, anim_options.scale)
+        prop.pos = skf_py.vec_add(prop.pos, anim_options.position)
 
     return props
 
