@@ -83,7 +83,7 @@ while running:
     # limits FPS to 60
     # dt is delta time in seconds since last frame, used for framerate-
     # independent physics.
-    dt = clock.tick(60) / 1000
+    dt = clock.tick(144) / 1000
     moving = False
 
 pygame.quit()
