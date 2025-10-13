@@ -35,15 +35,15 @@ class AnimOptions:
 
 # Animate a SkelForm armature.
 def animate(
-    screen,
     armature,
     texture_img,
-    anim_idx,
-    frame=-1,
+    animations: list[skf_py.Animation],
+    frames: list[int],
+    screen,
     anim_options=AnimOptions(),
 ):
-    if anim_idx < len(armature.animations):
-        armature.bones = skf_py.animate(armature, anim_idx, frame)
+    for a in range(len(animations)):
+        armature.bones = skf_py.animate(armature, animations[a], frames[a])
 
     props = copy.deepcopy(armature.bones)
     inh_props = copy.deepcopy(props)
