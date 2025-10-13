@@ -1,4 +1,9 @@
 # Example file showing a circle moving on screen
+
+import sys
+
+sys.path.append("../../skelform_pygame")
+
 import pygame
 import zipfile
 import json
@@ -12,9 +17,9 @@ clock = pygame.time.Clock()
 running = True
 dt = 0
 
-player_pos = pygame.Vector2(screen.get_width()/2, screen.get_height()/2)
+player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 
-(skelform_root, texture_img) = skelform_pygame.load_skelform("skellington.skf")
+(skellington, skellington_img) = skelform_pygame.load_skelform("untitled.skf")
 
 moving = False
 
@@ -42,6 +47,17 @@ while running:
         player_pos.x += 300 * dt
         moving = True
 
+    speed = 50
+
+    if keys[pygame.K_UP]:
+        skellington.armature.bones[1].pos.y += speed
+    if keys[pygame.K_DOWN]:
+        skellington.armature.bones[1].pos.y -= speed
+    if keys[pygame.K_LEFT]:
+        skellington.armature.bones[1].pos.x -= speed
+    if keys[pygame.K_RIGHT]:
+        skellington.armature.bones[1].pos.x += speed
+
     anim_idx = 0
 
     if moving:
@@ -49,13 +65,14 @@ while running:
 
     skelform_pygame.animate(
         screen,
-        skelform_root["armature"],
-        texture_img,
+        skellington.armature,
+        skellington_img,
         anim_idx,
         -1,
         time.time(),
         skelform_pygame.AnimOptions(player_pos, 0.25, True),
     )
+
     # flip() the display to put your work on screen
     pygame.display.flip()
 

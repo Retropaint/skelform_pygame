@@ -1,14 +1,21 @@
+import sys
+
+sys.path.append("../../skelform_python")
+
 import pygame
 import skelform_python
 import math
 import copy
 import zipfile
 import json
+from types import SimpleNamespace
 
 
 def load_skelform(path):
     with zipfile.ZipFile(path, "r") as zip_file:
-        skelform_root = json.load(zip_file.open("armature.json"))
+        skelform_root = json.load(
+            zip_file.open("armature.json"), object_hook=lambda d: SimpleNamespace(**d)
+        )
         texture_img = pygame.image.load(zip_file.open("textures.png"))
 
     return (skelform_root, texture_img)
@@ -40,46 +47,55 @@ def animate(
     elapsed_time=-1,
     anim_options=AnimOptions(),
 ):
-    if elapsed_time != -1:
-        frame = get_frame_by_time(armature, anim_idx, elapsed_time, False)
+    props = copy.deepcopy(armature.bones)
 
-    props = skelform_python.animate(armature, anim_idx, frame)
+    if anim_idx < len(armature.animations):
+        if elapsed_time != -1:
+            frame = get_frame_by_time(armature, anim_idx, elapsed_time, False)
+        props = skelform_python.animate(armature, anim_idx, frame)
+
+    inh_props = copy.deepcopy(props)
+
+    inh_props = skelform_python.inheritance(inh_props, {})
+    for i in range(10):
+        ik_rots = skelform_python.inverse_kinematics(inh_props, armature.ik_families, False)
+    props = skelform_python.inheritance(props, ik_rots)
 
     ao = anim_options
 
     for prop in props:
-        if prop["tex_idx"] == -1:
+        if "style_idxs" not in vars(prop):
             continue
 
-        tex = armature["textures"][prop["tex_idx"]]
+        tex = armature.styles[0].textures[prop.tex_idx]
         tex_surf = clip(
             texture_img,
-            tex["offset"]["x"],
-            tex["offset"]["y"],
-            tex["size"]["x"],
-            tex["size"]["y"],
+            tex.offset.x,
+            tex.offset.y,
+            tex.size.x,
+            tex.size.y,
         )
 
-        scale_x = ao.scale_factor * prop["scale"]["x"]
-        scale_y = ao.scale_factor * prop["scale"]["y"]
+        scale_x = ao.scale_factor * prop.scale.x
+        scale_y = ao.scale_factor * prop.scale.y
         tex_surf = pygame.transform.scale_by(
             tex_surf,
             (scale_x, scale_y),
         )
 
         # pygame treats positive y as down
-        prop["pos"]["y"] = -prop["pos"]["y"]
+        prop.pos.y = -prop.pos.y
 
         # adjust positions for scale factor
         # actual scale is already accounted for in core logic
-        prop["pos"]["x"] *= ao.scale_factor
-        prop["pos"]["y"] *= ao.scale_factor
+        prop.pos.x *= ao.scale_factor
+        prop.pos.y *= ao.scale_factor
 
         # push textures back left and up so that it's centered
-        prop["pos"]["x"] -= tex_surf.get_size()[0] / 2
-        prop["pos"]["y"] -= tex_surf.get_size()[1] / 2
+        prop.pos.x -= tex_surf.get_size()[0] / 2
+        prop.pos.y -= tex_surf.get_size()[1] / 2
 
-        deg = prop["rot"] * 180 / 3.14
+        deg = prop.rot * 180 / 3.14
         (tex_surf, rect) = rot_center(tex_surf, tex_surf.get_rect(), deg)
 
         if not ao.render:
@@ -88,8 +104,8 @@ def animate(
         screen.blit(
             tex_surf,
             rect.move(
-                prop["pos"]["x"] + ao.pos_offset.x,
-                prop["pos"]["y"] + ao.pos_offset.y,
+                prop.pos.x + ao.pos_offset.x,
+                prop.pos.y + ao.pos_offset.y,
             ),
         )
 
