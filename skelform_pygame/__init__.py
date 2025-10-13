@@ -1,14 +1,15 @@
 import sys
 
-sys.path.append("../../skelform_python")
-
-import pygame
-import skelform_python as skf_py
 import math
 import copy
 import zipfile
 import json
+
+# 3rd parties
+sys.path.append("../../skelform_python")
+import skelform_python as skf_py
 import dacite
+import pygame
 
 
 def load_skelform(path):
