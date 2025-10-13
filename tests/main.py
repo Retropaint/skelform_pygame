@@ -63,15 +63,18 @@ while running:
     if moving:
         anim_idx = 1
 
-    skelform_pygame.animate(
+    frame = skelform_pygame.time_frame(
+        time.time(), skellington.armature.animations[0], False, True
+    )
+    props = skelform_pygame.animate(
         screen,
         skellington.armature,
         skellington_img,
         anim_idx,
-        -1,
-        time.time(),
-        skelform_pygame.AnimOptions(player_pos, 0.25, True),
+        frame,
+        skelform_pygame.AnimOptions(player_pos, 0.25),
     )
+    skelform_pygame.draw(props, skellington.armature.styles, skellington_img, screen)
 
     # flip() the display to put your work on screen
     pygame.display.flip()
