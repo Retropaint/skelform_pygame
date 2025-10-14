@@ -88,12 +88,9 @@ def draw(props, styles, tex_img, screen):
             continue
 
         tex = styles[0].textures[prop.tex_idx]
-        tex_surf = clip(
-            tex_img,
-            tex.offset.x,
-            tex.offset.y,
-            tex.size.x,
-            tex.size.y,
+
+        tex_surf = tex_img.subsurface(
+            (tex.offset.x, tex.offset.y, tex.size.x, tex.size.y)
         )
 
         tex_surf = pygame.transform.scale_by(
@@ -111,7 +108,7 @@ def draw(props, styles, tex_img, screen):
         prop_tex_pos.x -= tex_surf.get_size()[0] / 2
         prop_tex_pos.y -= tex_surf.get_size()[1] / 2
 
-        deg = prop.rot * 180 / 3.14
+        deg = math.degrees(prop.rot)
         (tex_surf, rect) = rot_center(tex_surf, tex_surf.get_rect(), deg)
 
         surfaces.append(
@@ -129,15 +126,6 @@ def draw(props, styles, tex_img, screen):
 
 def get_frame_by_time(armature, anim_idx, elapsed, reverse):
     return skf_py.get_frame_by_time(armature, anim_idx, elapsed, reverse)
-
-
-# https://stackoverflow.com/a/71370036
-def clip(surface, x, y, x_size, y_size):  # Get a part of the image
-    handle_surface = surface.copy()  # Sprite that will get process later
-    clipRect = pygame.Rect(x, y, x_size, y_size)  # Part of the image
-    handle_surface.set_clip(clipRect)  # Clip or you can call cropped
-    image = surface.subsurface(handle_surface.get_clip())  # Get subsurface
-    return image.copy()  # Return
 
 
 # https://www.pygame.org/wiki/RotateCenter
