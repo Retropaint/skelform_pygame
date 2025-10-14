@@ -124,10 +124,6 @@ def draw(props, styles, tex_img, screen):
     screen.blits(surfaces)
 
 
-def get_frame_by_time(armature, anim_idx, elapsed, reverse):
-    return skf_py.get_frame_by_time(armature, anim_idx, elapsed, reverse)
-
-
 # https://www.pygame.org/wiki/RotateCenter
 def rot_center(image, rect, angle):
     rot_image = pygame.transform.rotate(image, angle)
