@@ -8,20 +8,20 @@ from dataclasses import dataclass
 from typing import Optional
 
 # 3rd parties
-sys.path.append("../../skelform_python")
+sys.path.append("/Users/o/projects/skelform/runtimes/skelform_python")
 import skelform_python as skf_py
 import dacite
 import pygame
 
 
-def load_skelform(path):
+def load(path):
     with zipfile.ZipFile(path, "r") as zip_file:
-        skelform_root_json = json.load(zip_file.open("armature.json"))
+        armature_json = json.load(zip_file.open("armature.json"))
         texture_img = pygame.image.load(zip_file.open("textures.png"))
 
-    skelform_root = dacite.from_dict(data_class=skf_py.SkfRoot, data=skelform_root_json)
+    armature = dacite.from_dict(data_class=skf_py.Armature, data=armature_json)
 
-    return (skelform_root, texture_img)
+    return (armature, texture_img)
 
 
 @dataclass
