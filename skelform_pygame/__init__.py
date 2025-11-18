@@ -66,9 +66,9 @@ def animate(
     for bone in final_bones:
         bone.pos.y = -bone.pos.y
 
-        bone.pos = skf_py.vec_mul(bone.pos, anim_options.scale)
-        bone.scale = skf_py.vec_mul(bone.scale, anim_options.scale)
-        bone.pos = skf_py.vec_add(bone.pos, anim_options.position)
+        bone.pos *= anim_options.scale
+        bone.scale *= anim_options.scale
+        bone.pos += anim_options.position
 
         either = anim_options.scale.x < 0 or anim_options.scale.y < 0
         both = anim_options.scale.x < 0 and anim_options.scale.y < 0
