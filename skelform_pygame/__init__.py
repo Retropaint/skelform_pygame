@@ -58,7 +58,7 @@ def animate(
     inh_props = copy.deepcopy(armature.bones)
 
     inh_props = skf_py.inheritance(inh_props, {})
-    ik_rots = skf_py.inverse_kinematics(inh_props, armature.ik_families, False)
+    ik_rots = skf_py.inverse_kinematics(inh_props, armature.ik_families)
 
     final_bones = copy.deepcopy(armature.bones)
     final_bones = skf_py.inheritance(final_bones, ik_rots)
