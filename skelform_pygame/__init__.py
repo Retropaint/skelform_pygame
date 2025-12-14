@@ -17,11 +17,15 @@ import pygame
 def load(path):
     with zipfile.ZipFile(path, "r") as zip_file:
         armature_json = json.load(zip_file.open("armature.json"))
-        texture_img = pygame.image.load(zip_file.open("textures.png"))
 
     armature = dacite.from_dict(data_class=skf_py.Armature, data=armature_json)
+    textures = []
 
-    return (armature, texture_img)
+    with zipfile.ZipFile(path, "r") as zip_file:
+        for atlas in armature.atlases:
+            textures.append(pygame.image.load(zip_file.open(atlas.filename)))
+
+    return (armature, textures)
 
 
 @dataclass
@@ -44,24 +48,15 @@ class AnimOptions:
 # Animate a SkelForm armature.
 def animate(
     armature,
-    texture_img,
     animations: list[skf_py.Animation],
     frames: list[int],
-    screen,
-    anim_options=AnimOptions(),
+    blend_frames: list[int],
 ):
-    for a in range(len(animations)):
-        armature.bones = skf_py.animate(
-            armature, animations[a], frames[a], anim_options.blend_frames[a]
-        )
+    return skf_py.animate(armature, animations, frames, blend_frames)
 
-    inh_props = copy.deepcopy(armature.bones)
 
-    inh_props = skf_py.inheritance(inh_props, {})
-    ik_rots = skf_py.inverse_kinematics(inh_props, armature.ik_families)
-
-    final_bones = copy.deepcopy(armature.bones)
-    final_bones = skf_py.inheritance(final_bones, ik_rots)
+def construct(armature, screen, anim_options):
+    final_bones = skf_py.construct(armature)
 
     for bone in final_bones:
         bone.pos.y = -bone.pos.y
@@ -70,25 +65,24 @@ def animate(
         bone.scale *= anim_options.scale
         bone.pos += anim_options.position
 
-        either = anim_options.scale.x < 0 or anim_options.scale.y < 0
-        both = anim_options.scale.x < 0 and anim_options.scale.y < 0
-        if either and not both:
-            bone.rot = -bone.rot
+        bone.rot = skf_py.check_bone_flip(bone.rot, anim_options.scale)
 
     return final_bones
 
 
-def draw(props, styles, tex_img, screen):
+def draw(props, styles, tex_imgs, screen):
     props.sort(key=lambda prop: prop.zindex)
     surfaces = []
 
+    final_textures = skf_py.setup_bone_textures(props, styles)
+
     for prop in props:
-        if prop.style_ids is None:
+        if prop.id not in final_textures:
             continue
 
-        tex = styles[0].textures[prop.tex_idx]
+        tex = final_textures[prop.id]
 
-        tex_surf = tex_img.subsurface(
+        tex_surf = tex_imgs[tex.atlas_idx].subsurface(
             (tex.offset.x, tex.offset.y, tex.size.x, tex.size.y)
         )
 
@@ -110,15 +104,12 @@ def draw(props, styles, tex_img, screen):
         deg = math.degrees(prop.rot)
         (tex_surf, rect) = rot_center(tex_surf, tex_surf.get_rect(), deg)
 
-        surfaces.append(
-            (
-                tex_surf,
-                rect.move(
-                    prop_tex_pos.x,
-                    prop_tex_pos.y,
-                ),
-            )
+        moved_rect = rect.move(
+            prop_tex_pos.x,
+            prop_tex_pos.y,
         )
+
+        surfaces.append((tex_surf, moved_rect))
 
     screen.blits(surfaces)
 
