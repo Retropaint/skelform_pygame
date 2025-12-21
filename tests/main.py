@@ -2,13 +2,18 @@
 
 import sys
 
+import os
+
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
+
 sys.path.append("../../skelform_pygame")
 
 import pygame
 import zipfile
 import json
-import skelform_pygame
+import skelform_pygame as skf_pg
 import time
+import copy
 
 pygame.init()
 screen = pygame.display.set_mode((1280, 720))
@@ -16,74 +21,113 @@ pygame.display.set_caption("SkelForm Basic Animation")
 clock = pygame.time.Clock()
 running = True
 dt = 0
+dir = 1
+anim_time = 0
+blend = 20
 
 player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 
-(skellington, skellington_img) = skelform_pygame.load_skelform("untitled.skf")
+(skellington, skellington_img) = skf_pg.load("skellina.skf")
 
-moving = False
+
+def bone(name, bones):
+    for bone in bones:
+        if bone.name == name:
+            return bone
+
 
 while running:
-    # poll for events
-    # pygame.QUIT event means the user clicked X to close your window
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
-    # fill the screen with a color to wipe away anything from last frame
-    screen.fill("black")
+    screen.fill("grey")
+
+    speed = 400
+
+    moving = False
 
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_w]:
-        player_pos.y -= 300 * dt
-        moving = True
-    if keys[pygame.K_s]:
-        player_pos.y += 300 * dt
-        moving = True
     if keys[pygame.K_a]:
-        player_pos.x -= 300 * dt
+        player_pos.x -= speed * dt
+        dir = -1
         moving = True
     if keys[pygame.K_d]:
-        player_pos.x += 300 * dt
+        player_pos.x += speed * dt
+        dir = 1
         moving = True
 
-    speed = 50
+    keys_down = pygame.key.get_just_pressed()
+    if keys_down[pygame.K_d]:
+        anim_time = 0
+        blend = 20
+    if keys_down[pygame.K_a]:
+        anim_time = 0
+        blend = 20
 
-    if keys[pygame.K_UP]:
-        skellington.armature.bones[1].pos.y += speed
-    if keys[pygame.K_DOWN]:
-        skellington.armature.bones[1].pos.y -= speed
-    if keys[pygame.K_LEFT]:
-        skellington.armature.bones[1].pos.x -= speed
-    if keys[pygame.K_RIGHT]:
-        skellington.armature.bones[1].pos.x += speed
+    keys_up = pygame.key.get_just_released()
+    if keys_up[pygame.K_d]:
+        anim_time = 0
+        blend = 20
+    if keys_up[pygame.K_a]:
+        anim_time = 0
+        blend = 20
 
     anim_idx = 0
-
     if moving:
         anim_idx = 1
 
-    skel = skellington.armature
-    frame = skelform_pygame.time_frame(time.time(), skel.animations[0], False, True)
-    props = skelform_pygame.animate(
-        skellington.armature,
-        skellington_img,
-        [
-            skel.animations[0],
-        ],
-        [frame],
-        screen,
-        skelform_pygame.AnimOptions(player_pos, 0.25),
+    anim_frame = skf_pg.time_frame(
+        anim_time, skellington.animations[anim_idx], False, True
     )
-    skelform_pygame.draw(props, skellington.armature.styles, skellington_img, screen)
+    skellington.bones = skf_pg.animate(
+        skellington,
+        [skellington.animations[anim_idx]],
+        [anim_frame],
+        [20],
+    )
 
-    # flip() the display to put your work on screen
+    # make immutable edits to armature for construction
+    skellington_c = copy.deepcopy(skellington)
+
+    # point shoulder and head to mouse
+    skel_scale = 0.15
+    shoulder_target = bone("Left Shoulder Pad Target", skellington_c.bones)
+    looker = bone("Looker", skellington_c.bones)
+    raw_mouse = pygame.mouse.get_pos()
+    mouse = skf_pg.skf_py.Vec2(
+        -player_pos.x / skel_scale * dir + raw_mouse[0] / skel_scale * dir,
+        player_pos.y / skel_scale - raw_mouse[1] / skel_scale,
+    )
+    shoulder_target.pos = mouse
+    looker.pos = mouse
+
+    # flip shoulder IK constraint if looking the other way
+    left_shoulder = bone("Left Shoulder Pad", skellington_c.bones)
+    looking_back_left = dir == -1 and raw_mouse[0] > player_pos.x
+    looking_back_right = dir != -1 and raw_mouse[0] < player_pos.x
+    if looking_back_left or looking_back_right:
+        bone("Skull", skellington_c.bones).scale.y = -1
+        left_shoulder.ik_constraint = 1
+    else:
+        left_shoulder.ik_constraint = 2
+
+    # construct and draw skellina
+    props = skf_pg.construct(
+        skellington_c,
+        screen,
+        skf_pg.AnimOptions(
+            player_pos,
+            scale=pygame.Vector2(skel_scale * dir, skel_scale),
+            blend_frames=[blend],
+        ),
+    )
+    skf_pg.draw(props, skellington_c.styles, skellington_img, screen)
+    pygame.draw.circle(screen, (255, 0, 0), (raw_mouse), 5)
+
     pygame.display.flip()
 
-    # limits FPS to 60
-    # dt is delta time in seconds since last frame, used for framerate-
-    # independent physics.
     dt = clock.tick(144) / 1000
-    moving = False
+    anim_time += clock.get_time() / 1000
 
 pygame.quit()
