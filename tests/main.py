@@ -24,6 +24,7 @@ dt = 0
 dir = 1
 anim_time = 0
 blend = 20
+last_anim_idx = 0
 
 player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 
@@ -57,25 +58,13 @@ while running:
         dir = 1
         moving = True
 
-    keys_down = pygame.key.get_just_pressed()
-    if keys_down[pygame.K_d]:
-        anim_time = 0
-        blend = 20
-    if keys_down[pygame.K_a]:
-        anim_time = 0
-        blend = 20
-
-    keys_up = pygame.key.get_just_released()
-    if keys_up[pygame.K_d]:
-        anim_time = 0
-        blend = 20
-    if keys_up[pygame.K_a]:
-        anim_time = 0
-        blend = 20
-
     anim_idx = 0
     if moving:
         anim_idx = 1
+
+    if last_anim_idx != anim_idx:
+        anim_time = 0
+        last_anim_idx = anim_idx
 
     anim_frame = skf_pg.time_frame(
         anim_time, skellington.animations[anim_idx], False, True

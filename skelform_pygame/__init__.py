@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 # 3rd parties
-sys.path.append("/Users/o/projects/skelform/runtimes/skelform_python")
+# sys.path.append("/Users/o/projects/skelform/runtimes/skelform_python")
 import skelform_python as skf_py
 import dacite
 import pygame
