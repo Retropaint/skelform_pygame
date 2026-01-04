@@ -86,7 +86,9 @@ def draw(props, styles, tex_imgs, screen):
             (tex.offset.x, tex.offset.y, tex.size.x, tex.size.y)
         )
 
-        tex_surf = pygame.transform.scale_by(
+        pygame.Surface.convert(tex_surf)
+
+        tex_surf = pygame.transform.smoothscale_by(
             tex_surf,
             (math.fabs(prop.scale.x), math.fabs(prop.scale.y)),
         )
