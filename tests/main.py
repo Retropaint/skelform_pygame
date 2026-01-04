@@ -80,6 +80,8 @@ while running:
         player_pos.y = ground - 1
         vel_y = -10
         grounded = False
+        started_falling = False
+        anim_time = 0
 
     # gravity
     player_pos.y += vel_y
@@ -97,8 +99,6 @@ while running:
     if not grounded:
         anim_idx = 3
         looping = False
-    else:
-        started_falling = False
 
     # falling animation
     if vel_y > 0:
