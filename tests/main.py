@@ -32,7 +32,7 @@ ground = screen.get_height() / 2 + 75
 
 player_pos = pygame.Vector2(screen.get_width() / 2, ground - 50)
 
-(skellington, skellington_img) = skf_pg.load("skellina.skf")
+(skellina, skellina_img) = skf_pg.load("skellina.skf")
 
 
 # helper for finding bone by name
@@ -114,22 +114,22 @@ while running:
         last_anim_idx = anim_idx
 
     anim_frame = skf_pg.time_frame(
-        anim_time, skellington.animations[anim_idx], reversing, looping
+        anim_time, skellina.animations[anim_idx], reversing, looping
     )
-    skellington.bones = skf_pg.animate(
-        skellington,
-        [skellington.animations[anim_idx]],
+    skellina.bones = skf_pg.animate(
+        skellina,
+        [skellina.animations[anim_idx]],
         [anim_frame],
         [blend_frames],
     )
 
     # make immutable edits to armature for construction
-    skellington_c = copy.deepcopy(skellington)
+    skellina_c = copy.deepcopy(skellina)
 
     # point shoulder and head to mouse
     skel_scale = 0.15
-    shoulder_target = bone("Left Shoulder Pad Target", skellington_c.bones)
-    looker = bone("Looker", skellington_c.bones)
+    shoulder_target = bone("Left Shoulder Pad Target", skellina_c.bones)
+    looker = bone("Looker", skellina_c.bones)
     raw_mouse = pygame.mouse.get_pos()
     mouse = skf_pg.skf_py.Vec2(
         -player_pos.x / skel_scale * dir + raw_mouse[0] / skel_scale * dir,
@@ -139,26 +139,25 @@ while running:
     looker.pos = mouse
 
     # flip shoulder IK constraint if looking the other way
-    left_shoulder = bone("Left Shoulder Pad", skellington_c.bones)
+    left_shoulder = bone("Left Shoulder Pad", skellina_c.bones)
     looking_back_left = dir == -1 and raw_mouse[0] > player_pos.x
     looking_back_right = dir != -1 and raw_mouse[0] < player_pos.x
     if looking_back_left or looking_back_right:
-        bone("Skull", skellington_c.bones).scale.y = -1
+        bone("Skull", skellina_c.bones).scale.y = -1
         left_shoulder.ik_constraint = 1
     else:
         left_shoulder.ik_constraint = 2
 
     # construct and draw skellina
     props = skf_pg.construct(
-        skellington_c,
+        skellina_c,
         screen,
-        skf_pg.AnimOptions(
+        skf_pg.ConstructOptions(
             player_pos,
             scale=pygame.Vector2(skel_scale * dir, skel_scale),
-            blend_frames=[blend],
         ),
     )
-    skf_pg.draw(props, skellington_c.styles, skellington_img, screen)
+    skf_pg.draw(props, skellina_c.styles, skellina_img, screen)
     pygame.draw.circle(screen, (255, 0, 0), (raw_mouse), 5)
 
     # Text
