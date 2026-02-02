@@ -1,7 +1,7 @@
 Library for running [SkelForm](https://skelform.org) animations in
 [Pygame](https://pygame.org).
 
-```
+```python
 import skelform_pygame as skf_pg
 ```
 
@@ -16,7 +16,7 @@ import skelform_pygame as skf_pg
 
 ### 1. Load:
 
-```
+```python
 (armature, textures) = skf_pg.load("skellina.skf")
 ```
 
@@ -25,7 +25,7 @@ This should only be called once (eg; before main game loop), and `armature` and
 
 ### 2\. Animate:
 
-```
+```python
 # use `skf_pg.time_frame()` to get the animation frame based on time (1000 = 1 second)
 time = 2000
 frame = skf_pg.time_frame(time, armature.animations[0], False, True)
@@ -39,7 +39,7 @@ _Note: not needed if armature is statilc_
 
 ### 3\. Construct:
 
-```
+```python
 center = pygame.Vector2(screen.get_width()/2, screen.get_height()/2)
 
 final_bones = skf_pg.construct(
@@ -56,7 +56,7 @@ construction.
 
 ### 4\. Draw:
 
-```
+```python
 skf_pg.draw(final_bones, armature.styles, textures, screen)
 ```
 
