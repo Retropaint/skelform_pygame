@@ -19,6 +19,6 @@ license = "MIT"
 license-files = ["LICEN[CS]E*"]
 dependencies = [
     "dacite>=1.9.2",
-    "pygame>=2.6.1",
+    "pygame-ce>=2.5.6",
     "skelform-python>=0.2.0.1",
 ]
