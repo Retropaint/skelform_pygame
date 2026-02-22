@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "skelform_pygame"
-version = "0.2.2"
+version = "0.4.0"
 authors = [
   { name="Retropaint", email="darkglasses1122@gmail.com" },
 ]
@@ -20,5 +20,11 @@ license-files = ["LICEN[CS]E*"]
 dependencies = [
     "dacite>=1.9.2",
     "pygame-ce>=2.5.6",
-    "skelform-python>=0.2.0.1",
+    "skelform-python>=0.4.0",
 ]
+
+[tool.setuptools.package-data]
+"skelform_pygame" = ["examples/*"]
+
+[project.scripts]
+demo = "skelform_pygame:tests"

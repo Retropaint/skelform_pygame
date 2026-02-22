@@ -62,7 +62,7 @@ def animate(
 #
 # While constructing, several options (positional offset, scale) may be set.
 def construct(
-    armature: skf_py.Armature, screen: pygame.Surface, anim_options: ConstructOptions
+    armature: skf_py.Armature, anim_options: ConstructOptions
 ) -> List[skf_py.Bone]:
     final_bones = skf_py.construct(armature)
 
