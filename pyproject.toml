@@ -24,7 +24,7 @@ dependencies = [
 ]
 
 [tool.setuptools.package-data]
-"skelform_pygame" = ["examples/*"]
+"skelform_pygame.examples" = ["*.skf"]
 
 [project.scripts]
-demo = "skelform_pygame:tests"
+skelform-demo = "skelform_pygame:examples"

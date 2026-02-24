@@ -6,8 +6,6 @@ import os
 
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 
-sys.path.append("../../skelform_pygame")
-
 import pygame
 import zipfile
 import json
@@ -32,7 +30,7 @@ ground = screen.get_height() / 2 + 75
 
 player_pos = pygame.Vector2(screen.get_width() / 2, ground - 50)
 
-path = "skellina.skf"
+path = files("skelform_pygame.examples").joinpath("skellina.skf")
 (skellina, skellina_img) = skf_pg.load(path)
 
 
@@ -145,9 +143,9 @@ while running:
     looking_back_right = dir != -1 and raw_mouse[0] < player_pos.x
     if looking_back_left or looking_back_right:
         bone("Skull", skellina_c.bones).scale.y = -1
-        left_shoulder.ik_constraint = 1
+        left_shoulder.ik_constraint = "Clockwise"
     else:
-        left_shoulder.ik_constraint = 2
+        left_shoulder.ik_constraint = "CounterClockwise"
 
     # construct and draw skellina
     props = skf_pg.construct(
