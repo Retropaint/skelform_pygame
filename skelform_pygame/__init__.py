@@ -39,9 +39,11 @@ class ConstructOptions:
         self,
         position=pygame.Vector2(0, 0),
         scale=pygame.Vector2(0.25, 0.25),
+        velocity=pygame.Vector2(0, 0),
     ):
         self.position = position
         self.scale = scale
+        self.velocity = velocity
 
 
 # Transforms an armature's bones based on the provided animation(s) and their frame(s).
@@ -61,21 +63,24 @@ def animate(
 # Returns the constructed array of bones from this armature.
 #
 # While constructing, several options (positional offset, scale) may be set.
-def construct(
-    armature: skf_py.Armature, anim_options: ConstructOptions
-) -> List[skf_py.Bone]:
-    final_bones = skf_py.construct(armature)
+def construct(armature: skf_py.Armature, const_options: ConstructOptions):
+    armature.cached_bones = skf_py.construct(armature)
 
-    for bone in final_bones:
-        bone.pos.y = -bone.pos.y
+    for b in range(len(armature.cached_bones)):
+        const_bone = armature.cached_bones[b]
+        arm_bone = armature.bones[b]
 
-        bone.pos *= anim_options.scale
-        bone.scale *= anim_options.scale
-        bone.pos += anim_options.position
+        const_bone.pos.y = -const_bone.pos.y
 
-        bone.rot = skf_py.check_bone_flip(bone.rot, anim_options.scale)
+        const_bone.pos *= const_options.scale
+        const_bone.scale *= const_options.scale
+        const_bone.pos += const_options.position
 
-    return final_bones
+        arm_bone.phys_global_pos -= const_options.velocity
+
+        const_bone.rot = skf_py.check_bone_flip(const_bone.rot, const_options.scale)
+
+    return (armature.bones, armature.cached_bones)
 
 
 # Draws the bones to the provided screen, using the provided styles and textures.
