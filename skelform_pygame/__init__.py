@@ -64,10 +64,10 @@ def animate(
 #
 # While constructing, several options (positional offset, scale) may be set.
 def construct(armature: skf_py.Armature, const_options: ConstructOptions):
-    armature.cached_bones = skf_py.construct(armature)
+    armature.constructed_bones = skf_py.construct(armature)
 
-    for b in range(len(armature.cached_bones)):
-        const_bone = armature.cached_bones[b]
+    for b in range(len(armature.constructed_bones)):
+        const_bone = armature.constructed_bones[b]
         arm_bone = armature.bones[b]
 
         const_bone.pos.y = -const_bone.pos.y
@@ -80,7 +80,7 @@ def construct(armature: skf_py.Armature, const_options: ConstructOptions):
 
         const_bone.rot = skf_py.check_bone_flip(const_bone.rot, const_options.scale)
 
-    return (armature.bones, armature.cached_bones)
+    return (armature.bones, armature.constructed_bones)
 
 
 # Draws the bones to the provided screen, using the provided styles and textures.

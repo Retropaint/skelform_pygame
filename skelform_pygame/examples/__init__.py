@@ -130,7 +130,7 @@ while running:
 
     skel_scale = 0.15
     raw_mouse = pygame.mouse.get_pos()
-    if skellina.cached_bones:
+    if skellina.constructed_bones:
         # point shoulder and head to mouse
         shoulder_target = bone("Left Shoulder Pad Target", skellina.bones)
         looker = bone("Looker", skellina.bones)
@@ -142,7 +142,7 @@ while running:
         looker.pos = mouse
 
         # flip shoulder IK constraint if looking the other way
-        left_shoulder = bone("Left Shoulder Pad", skellina.cached_bones)
+        left_shoulder = bone("Left Shoulder Pad", skellina.constructed_bones)
         looking_back_left = dir == -1 and raw_mouse[0] > player_pos.x
         looking_back_right = dir != -1 and raw_mouse[0] < player_pos.x
         if looking_back_left or looking_back_right:
@@ -153,7 +153,7 @@ while running:
             left_shoulder.ik_constraint = "CounterClockwise"
 
     # construct and draw skellina
-    (skellina.bones, skellina.cached_bones) = skf_pg.construct(
+    (skellina.bones, skellina.constructed_bones) = skf_pg.construct(
         skellina,
         skf_pg.ConstructOptions(
             player_pos,
@@ -162,7 +162,7 @@ while running:
         ),
     )
     skf_pg.draw(
-        skellina.cached_bones,
+        skellina.constructed_bones,
         chosen_styles,
         skellina_img,
         screen,
