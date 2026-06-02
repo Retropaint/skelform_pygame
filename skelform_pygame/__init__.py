@@ -108,9 +108,7 @@ def draw(
             (tex.offset.x, tex.offset.y, tex.size.x, tex.size.y)
         )
 
-        pygame.Surface.convert(tex_surf)
-
-        tex_surf = pygame.transform.smoothscale_by(
+        tex_surf = pygame.transform.scale_by(
             tex_surf,
             (math.fabs(bone.scale.x), math.fabs(bone.scale.y)),
         )
