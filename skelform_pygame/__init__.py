@@ -68,7 +68,6 @@ def construct(armature: skf_py.Armature, const_options: ConstructOptions):
 
     for b in range(len(armature.constructed_bones)):
         const_bone = armature.constructed_bones[b]
-        arm_bone = armature.bones[b]
 
         const_bone.pos.y = -const_bone.pos.y
 
@@ -76,7 +75,10 @@ def construct(armature: skf_py.Armature, const_options: ConstructOptions):
         const_bone.scale *= const_options.scale
         const_bone.pos += const_options.position
 
-        arm_bone.phys_global_pos -= const_options.velocity
+        if const_bone.physics_id != -1:
+            phys = armature.physics[const_bone.physics_id]
+            if phys:
+                phys.global_pos -= const_options.velocity
 
         const_bone.rot = skf_py.check_bone_flip(const_bone.rot, const_options.scale)
 
@@ -88,21 +90,23 @@ def construct(armature: skf_py.Armature, const_options: ConstructOptions):
 # Recommended: include the whole texture array from the file even if not all will be used,
 # as the provided styles will determine the final appearance.
 def draw(
-    bones: List[skf_py.Bone],
+    armature: skf_py.Armature,
     styles: List[skf_py.Style],
     tex_imgs: List[pygame.image],
     screen: pygame.Surface,
 ):
-    bones.sort(key=lambda prop: prop.zindex)
+    armature.constructed_bones.sort(
+        key=lambda prop: prop.visuals_id != -1
+        and armature.visuals[prop.visuals_id].zindex
+    )
     surfaces = []
 
-    final_textures = skf_py.setup_bone_textures(bones, styles)
-
-    for bone in bones:
-        if bone.id not in final_textures:
+    for bone in armature.constructed_bones:
+        if bone.visuals_id == -1:
             continue
+        visuals = armature.visuals[bone.visuals_id]
 
-        tex = final_textures[bone.id]
+        tex = skf_py.get_bone_texture(visuals.tex, styles)
 
         tex_surf = tex_imgs[tex.atlas_idx].subsurface(
             (tex.offset.x, tex.offset.y, tex.size.x, tex.size.y)
