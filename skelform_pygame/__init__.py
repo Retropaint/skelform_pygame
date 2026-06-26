@@ -80,7 +80,8 @@ def construct(armature: skf_py.Armature, const_options: ConstructOptions):
             if phys:
                 phys.global_pos -= const_options.velocity
 
-        const_bone.rot = skf_py.check_bone_flip(const_bone.rot, const_options.scale)
+        if skf_py.is_facing_left(const_options.scale):
+            const_bone.rot = -const_bone.rot
 
     return (armature.bones, armature.constructed_bones)
 
@@ -107,35 +108,50 @@ def draw(
         visuals = armature.visuals[bone.visuals_id]
 
         tex = skf_py.get_bone_texture(visuals.tex, styles)
+        if not tex:
+            continue
 
+        scale = skf_py.Vec2(
+            bone.scale.x * visuals.pivot_scale.x, bone.scale.y * visuals.pivot_scale.y
+        )
+
+        # setup texture surface
         tex_surf = tex_imgs[tex.atlas_idx].subsurface(
             (tex.offset.x, tex.offset.y, tex.size.x, tex.size.y)
         )
-
         tex_surf = pygame.transform.scale_by(
             tex_surf,
-            (math.fabs(bone.scale.x), math.fabs(bone.scale.y)),
+            (math.fabs(scale.x), math.fabs(scale.y)),
         )
 
-        if bone.scale.x < 0 or bone.scale.y < 0:
-            tex_surf = pygame.transform.flip(
-                tex_surf, bone.scale.x < 0, bone.scale.y < 0
-            )
+        if scale.x < 0 or scale.y < 0:
+            tex_surf = pygame.transform.flip(tex_surf, scale.x < 0, scale.y < 0)
 
-        # push textures back left and up so that it's centered
-        prop_tex_pos = bone.pos
-        prop_tex_pos.x -= tex_surf.get_size()[0] / 2
-        prop_tex_pos.y -= tex_surf.get_size()[1] / 2
+        # will be used to flip pivot rotations if necessary
+        dir = -1 if skf_py.is_facing_left(bone.scale) else 1
 
-        deg = math.degrees(bone.rot)
+        # setup pivot
+        pivot_pos = (
+            skf_py.rotate_vec2(visuals.pivot_pos * tex.size, bone.rot * dir) * bone.scale
+        )
+        pivot_pos.y = -pivot_pos.y
+
+        # rotate texture from its center
+        deg = math.degrees(bone.rot + visuals.pivot_rot * dir)
         (tex_surf, rect) = rot_center(tex_surf, tex_surf.get_rect(), deg)
 
-        moved_rect = rect.move(
-            prop_tex_pos.x,
-            prop_tex_pos.y,
+        # push textures back left and up so that it's centered
+        push_center = skf_py.Vec2(
+            tex.size.x / 2 * math.fabs(bone.scale.x),
+            tex.size.y / 2 * math.fabs(bone.scale.y),
         )
 
-        surfaces.append((tex_surf, moved_rect))
+        final_rect = rect.move(
+            bone.pos.x + (pivot_pos.x - push_center.x),
+            bone.pos.y + (pivot_pos.y - push_center.y),
+        )
+
+        surfaces.append((tex_surf, final_rect))
 
     screen.blits(surfaces)
 
